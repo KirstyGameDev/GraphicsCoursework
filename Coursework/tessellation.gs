@@ -13,7 +13,7 @@ struct PixelInputType
 
 [maxvertexcount(64)]
 
-void ColorGeometryShader(triangle PixelInputType input[3], inout PointStream <PixelInputType> triStream)
+void ColorGeometryShader(triangle PixelInputType input[3], inout TriangleStream <PixelInputType> triStream)
 {
 	PixelInputType output = (PixelInputType)0;
 	for(uint i = 0; i < 3; i++)

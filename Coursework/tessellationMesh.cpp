@@ -50,7 +50,7 @@ bool TessellationMeshClass::InitializeBuffers(ID3D11Device* device)
 	m_vertexCount = 8;
 
 	// Set the number of indices in the index array.
-	m_indexCount = 15;
+	m_indexCount = 24;
 
 	// Create the vertex array.
 	vertices = new VertexType[m_vertexCount];
@@ -105,20 +105,30 @@ bool TessellationMeshClass::InitializeBuffers(ID3D11Device* device)
 	indices[2] = 0;  // Bottom left.
 	indices[3] = 2;	//top right
 
-	indices[4] = 3;	//bottom left				right side quad
-	indices[5] = 5;	//top left
-	indices[6] = 2; //bottom right
-	indices[7] = 4; //top right
+	indices[4] = 6;								//left quad
+	indices[5] = 1;
+	indices[6]= 7;
+	indices[7] = 0;
 
 	indices[8] = 5;	//bottom left				back quad
 	indices[9] = 6; //top left
 	indices[10] =4; //bottom right
 	indices[11] = 7; //top right
 
-	indices[12] = 6;
-	indices[12] = 1;
-	indices[13] = 7;
-	indices[14] = 0;
+	indices[12] = 3;	//bottom left				right side quad
+	indices[13] = 5;	//top left
+	indices[14] = 2; //bottom right
+	indices[15] = 4; //top right
+
+	indices[16] = 6;								//Top quad
+	indices[17] = 5;
+	indices[18] = 1;
+	indices[19] = 3;
+
+	indices[20] = 0;							//Bottom quad
+	indices[21] = 7;
+	indices[22] = 2;
+	indices[23] = 4;
 
 
 
