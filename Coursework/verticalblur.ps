@@ -1,0 +1,49 @@
+Texture2D shaderTexture;
+SamplerState SampleType;
+
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+    float2 texCoord1 : TEXCOORD1;
+    float2 texCoord2 : TEXCOORD2;
+    float2 texCoord3 : TEXCOORD3;
+    float2 texCoord4 : TEXCOORD4;
+    float2 texCoord5 : TEXCOORD5;
+	float4 depthPosition : TEXCOORD6;
+  
+};
+
+float4 VerticalBlurPixelShader(PixelInputType input) : SV_TARGET
+{
+    float weight0, weight1, weight2;
+    float normalization;
+    float4 color;
+	float depthValue;
+
+	//Get the depth value of the pixel by divifing the Z pixel depth by the homogenous coordinate
+	depthValue = input.depthPosition.z / input.depthPosition.w;
+
+	// Create the weights that each neighbor pixel will contribute to the blur.
+	weight0 = 0.4062f;
+    weight1 = 0.2442f;
+    weight2 = 0.0545f;
+
+    // Initialize the color to black.
+    color = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // Add the nine vertical pixels to the color by the specific weight of each.
+   color += shaderTexture.Sample(SampleType, input.texCoord1) * depthValue*3;
+    color += shaderTexture.Sample(SampleType, input.texCoord2) * depthValue*2;
+    color += shaderTexture.Sample(SampleType, input.texCoord3) * depthValue;
+    color += shaderTexture.Sample(SampleType, input.texCoord4) * depthValue*2;
+    color += shaderTexture.Sample(SampleType, input.texCoord5) * depthValue*3;
+ 
+
+	//color = float4(depthValue, depthValue, depthValue, 1.0f);
+    // Set the alpha channel to one.
+   // color.a = 1.0f;
+
+    return color;
+}
+

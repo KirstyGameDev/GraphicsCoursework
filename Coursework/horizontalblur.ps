@@ -1,0 +1,43 @@
+Texture2D shaderTexture;
+SamplerState SampleType;
+
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+    float2 texCoord1 : TEXCOORD1;
+    float2 texCoord2 : TEXCOORD2;
+    float2 texCoord3 : TEXCOORD3;
+    float2 texCoord4 : TEXCOORD4;
+    float2 texCoord5 : TEXCOORD5;
+	float4 depthPosition : TEXCOORD10;
+};
+
+float4 HorizontalBlurPixelShader(PixelInputType input) : SV_TARGET
+{
+    float weight0, weight1, weight2, weight3, weight4;
+    float normalization;
+    float4 color;
+	float4 depthValue;
+
+	//Get the depth value of the pixel by dividing the Z pixel with the homogenous W coord
+	depthValue = input.depthPosition.z / input.depthPosition.w;
+
+	// Initialize the color to black.
+    color = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // Add the nine horizontal pixels to the color by the specific weight of each.
+    color += shaderTexture.Sample(SampleType, input.texCoord1) * depthValue*3;
+    color += shaderTexture.Sample(SampleType, input.texCoord2) * depthValue*2;
+    color += shaderTexture.Sample(SampleType, input.texCoord3) * depthValue;
+    color += shaderTexture.Sample(SampleType, input.texCoord4) * depthValue*2;
+    color += shaderTexture.Sample(SampleType, input.texCoord5) * depthValue*3;
+	
+
+	//color = float4(depthValue,depthValue, depthValue, 1.0f);
+
+	// Set the alpha channel to one.
+    //color.a = 1.0f;
+
+    return color;
+}
