@@ -26,8 +26,8 @@ const float SCREEN_NEAR = 0.1f;
 #include "meshclass.h"
 #include "lightclass.h"
 //#include "lightshaderclass.h"
-//#include "rendertextureclass.h"
-//#include "targetwindowclass.h"
+#include "rendertextureclass.h"
+#include "targetwindowclass.h"
 #include "horizontalblurshaderclass.h"
 #include "verticalblurshaderclass.h"
 #include "tessellationshaderclass.h"
@@ -51,7 +51,11 @@ public:
 private:
 	bool HandleInput(float);
 	bool RenderGraphics();
-	
+	bool RenderToTexture();
+	bool DownSampleTexture();
+	bool RenderHorizontalBlurToTexture();
+	bool RenderVerticalBlurToTexture();
+	bool UpSampleTexture();
 	bool RenderScene();
 
 
@@ -65,8 +69,8 @@ private:
 	MeshClass* m_Mesh;
 	//LightShaderClass* m_LightShader;
 	LightClass* m_Light;
-	//RenderTextureClass* m_RenderTexture, *m_DownSampleTexture,*m_UpSampleTexture, *m_HorizontalBlurTexture, *m_VerticalBlurTexture;
-	//TargetWindowClass* m_TargetWindow, *m_DownSampleWindow, *m_UpSampleWindow;
+	RenderTextureClass* m_RenderTexture, *m_DownSampleTexture,*m_UpSampleTexture, *m_HorizontalBlurTexture, *m_VerticalBlurTexture;
+	TargetWindowClass* m_TargetWindow, *m_DownSampleWindow, *m_UpSampleWindow;
 	HorizontalBlurShaderClass* m_HorizontalBlurShader;
 	VerticalBlurShaderClass* m_VerticalBlurShader;
 

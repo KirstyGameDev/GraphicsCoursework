@@ -83,13 +83,16 @@
     <ClCompile Include="fontclass.cpp" />
     <ClCompile Include="fontshaderclass.cpp" />
     <ClCompile Include="fpsclass.cpp" />
+    <ClCompile Include="fragmentationshaderclass.cpp" />
     <ClCompile Include="horizontalblurshaderclass.cpp" />
     <ClCompile Include="inputclass.cpp" />
     <ClCompile Include="lightclass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="meshclass.cpp" />
     <ClCompile Include="positionclass.cpp" />
+    <ClCompile Include="rendertextureclass.cpp" />
     <ClCompile Include="systemclass.cpp" />
+    <ClCompile Include="targetwindowclass.cpp" />
     <ClCompile Include="terrainclass.cpp" />
     <ClCompile Include="tessellationMesh.cpp" />
     <ClCompile Include="tessellationshaderclass.cpp" />
@@ -101,6 +104,9 @@
   <ItemGroup>
     <None Include="font.ps" />
     <None Include="font.vs" />
+    <None Include="fragmentation.gs" />
+    <None Include="fragmentation.ps" />
+    <None Include="fragmentation.vs" />
     <None Include="horizontalblur.ps" />
     <None Include="horizontalblur.vs" />
     <None Include="tessellation.ds" />
@@ -119,12 +125,15 @@
     <ClInclude Include="fontclass.h" />
     <ClInclude Include="fontshaderclass.h" />
     <ClInclude Include="fpsclass.h" />
+    <ClInclude Include="fragmentationshaderclass.h" />
     <ClInclude Include="horizontalblurshaderclass.h" />
     <ClInclude Include="inputclass.h" />
     <ClInclude Include="lightclass.h" />
     <ClInclude Include="meshclass.h" />
     <ClInclude Include="positionclass.h" />
+    <ClInclude Include="rendertextureclass.h" />
     <ClInclude Include="systemclass.h" />
+    <ClInclude Include="targetwindowclass.h" />
     <ClInclude Include="terrainclass.h" />
     <ClInclude Include="tessellationMesh.h" />
     <ClInclude Include="tessellationshaderclass.h" />

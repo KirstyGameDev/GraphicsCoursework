@@ -81,6 +81,15 @@
     <ClCompile Include="verticalblurshaderclass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fragmentationshaderclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rendertextureclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targetwindowclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="font.ps">
@@ -114,6 +123,15 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="verticalblur.vs">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="fragmentation.ps">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="fragmentation.vs">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="fragmentation.gs">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
@@ -176,6 +194,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="verticalblurshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fragmentationshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendertextureclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetwindowclass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

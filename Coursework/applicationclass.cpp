@@ -24,6 +24,15 @@ ApplicationClass::ApplicationClass()
 	m_Cube = 0;
 	m_TessellationShader = 0;
 	m_FragmentationShader = 0;
+	m_RenderTexture = 0;
+	m_DownSampleTexture = 0;
+	m_UpSampleTexture = 0;
+	m_HorizontalBlurTexture = 0;
+	m_VerticalBlurTexture = 0;
+	m_DownSampleWindow = 0;
+	m_UpSampleWindow = 0;
+	m_HorizontalBlurShader = 0;
+	m_VerticalBlurShader = 0;
 
 	tessellationAmount = 2;
 }
@@ -167,6 +176,37 @@ bool ApplicationClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidt
 		return false;
 	}
 
+	//Create the horizon shader object
+	m_HorizontalBlurShader = new HorizontalBlurShaderClass;
+	if(!m_HorizontalBlurShader)
+	{
+		return false;
+	}
+
+	//Initialize the horizontal shader object
+	result = m_HorizontalBlurShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the horizontal blur shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	//Create the vertical blur shader object
+	m_VerticalBlurShader = new VerticalBlurShaderClass;
+	if(!m_VerticalBlurShader)
+	{
+		return false;
+	}
+
+	//Initalize the vertical blur shader object
+	result = m_VerticalBlurShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialise the vertical blur shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+
 	//TODO get the fragmentation shader working
 	//Create the fragmentation shader object
 	//m_FragmentationShader = new FragmentationShaderClass;
@@ -222,6 +262,120 @@ bool ApplicationClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidt
 	m_Light->SetDiffuseColor(1.0f,0.0f, 0.0f,1.0f);
 	m_Light->SetDirection(0.0f,0.0f,-1.0f);
 
+
+
+	//Set up RenderTexture
+	m_RenderTexture = new RenderTextureClass;
+	if(!m_RenderTexture)
+	{
+		return false;
+	}
+
+	result = m_RenderTexture->Initialize(m_Direct3D->GetDevice(), screenWidth,screenHeight,SCREEN_DEPTH, SCREEN_NEAR);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the render texture object.", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set up down sample textre
+	m_DownSampleTexture = new RenderTextureClass;
+	if(!m_DownSampleTexture)
+	{
+		return false;
+	}
+
+	result = m_DownSampleTexture->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, SCREEN_DEPTH, SCREEN_NEAR);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialise the down sample texture object", L"Error", MB_OK);
+		return false;
+	}
+	
+	//Set up the up sample texture
+	m_UpSampleTexture = new RenderTextureClass;
+	if(!m_UpSampleTexture)
+	{
+		return false;
+	}
+
+	result = m_UpSampleTexture->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, SCREEN_DEPTH, SCREEN_NEAR);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialise the up sample texture object", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set up horizontal blur texture
+	m_HorizontalBlurTexture = new RenderTextureClass;
+	if(!m_HorizontalBlurTexture)
+	{
+		return false;
+	}
+
+	result = m_HorizontalBlurTexture->Initialize(m_Direct3D->GetDevice(), downSampleWidth, downSampleHeight, SCREEN_DEPTH, SCREEN_NEAR);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialise the horizontal blur texture object", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set up vertical blur texture
+	m_VerticalBlurTexture = new RenderTextureClass;
+	if(!m_VerticalBlurTexture)
+	{
+		return false;
+	}
+
+	result = m_VerticalBlurTexture->Initialize(m_Direct3D->GetDevice(), downSampleWidth, downSampleHeight, SCREEN_DEPTH, SCREEN_NEAR);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialise the vertical blur texture object", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set up target window
+	m_TargetWindow = new TargetWindowClass;
+	if(!m_TargetWindow)
+	{
+		return false;
+	}
+
+	result = m_TargetWindow->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, screenWidth/2, screenHeight/2);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the target windows object.", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set up down sample window
+	m_DownSampleWindow = new TargetWindowClass;
+	if(!m_DownSampleWindow)
+	{
+		return false;
+	}
+
+	result = m_DownSampleWindow->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, downSampleWidth, downSampleHeight);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not intialise the target windows object.", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set up up sample window
+	m_UpSampleWindow = new TargetWindowClass;
+	if(!m_UpSampleWindow)
+	{
+		return false;
+	}
+
+	result = m_UpSampleWindow->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, screenWidth, screenHeight);
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialise the target windows object.", L"Error", MB_OK);
+		return false;
+
+	}
 	return true;
 }
 
@@ -251,6 +405,22 @@ void ApplicationClass::Shutdown()
 		m_TessellationShader->Shutdown();
 		delete m_TessellationShader;
 		m_TessellationShader = 0;
+	}
+
+	//Release the horizontal blur shader object
+	if(m_HorizontalBlurShader)
+	{
+		m_HorizontalBlurShader->Shutdown();
+		delete m_HorizontalBlurShader;
+		m_HorizontalBlurShader = 0;
+	}
+
+	//Release the vertical blur shader object
+	if(m_VerticalBlurShader)
+	{
+		m_VerticalBlurShader->Shutdown();
+		delete m_VerticalBlurShader;
+		m_VerticalBlurShader = 0;
 	}
 
 	//Release the fragmentation shader object
@@ -409,7 +579,49 @@ bool ApplicationClass::RenderGraphics()
 	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 	bool result;
 
+	//Render the scene to a render to texture
+	result = RenderToTexture();
+	if(!result)
+	{
+		return false;
+	}
 
+	//Next downsamle the render texture to a smaller size texture
+	result = DownSampleTexture();
+	if(!result)
+	{
+		return false;
+	}
+
+	//Perform horizontal blur on the down sampled render texture
+	result = RenderHorizontalBlurToTexture();
+	if(!result)
+	{
+		return false;
+	}
+
+	//Now perform a vertical blue on the down sampled render texture
+	result = RenderVerticalBlurToTexture();
+	if(!result)
+	{
+		return false;
+	}
+
+	//Up sample the final blurred render texture to screen size again
+	result = UpSampleTexture();
+	if(!result)
+	{
+		return false;
+	}
+
+
+	//Render the blurred upsamples render texture to the screen.
+	result = RenderScene();
+	if(!result)
+	{
+		return false;
+	}
+	/*
 	// Clear the scene.
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -459,15 +671,61 @@ bool ApplicationClass::RenderGraphics()
 
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
-		
+		*/
 	return true;
 }
 
+bool ApplicationClass::RenderToTexture()
+{
+	D3DMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	bool result;
 
+	//Set the render target to be the render to texture
+	m_RenderTexture->SetRenderTarget(m_Direct3D->GetDeviceContext());
+
+	//Clear the render to texture
+	m_RenderTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), 1.0f,0.0f,0.0f,1.0f);
+
+	//Generate the view matrix based on the camera's position
+	m_Camera->Render();
+
+	//Get the world view and projection matrices from the camera and d3d objects
+	m_Camera->GetViewMatrix(&viewMatrix);
+	m_Direct3D->GetWorldMatrix(&worldMatrix);
+	m_Direct3D->GetProjectionMatrix(&projectionMatrix);
+
+	//Put the model onto the graphics pipeline to prepare them for drawing.
+	// Push mesh data onto gfx hardware
+	D3DXMatrixTranslation(&worldMatrix, 0, 0 ,5);
+	m_TessellationMesh->Render(m_Direct3D->GetDeviceContext());	
+	
+	//Render the Mesh using the light shader
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(),  m_TessellationMesh->GetIndexCount(),  worldMatrix, viewMatrix, projectionMatrix, tessellationAmount, m_TessellationMesh->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+
+	D3DXMatrixTranslation(&worldMatrix, 2, 0, 0);
+
+	m_Cube->Render(m_Direct3D->GetDeviceContext());
+
+	//Render the Mesh using the light shader
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(),  m_Cube->GetIndexCount(),  worldMatrix, viewMatrix, projectionMatrix, tessellationAmount, m_Cube->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	//Reset the render target back to the original back buffer and not the render to texture anymore
+	m_Direct3D->SetBackBufferRenderTarget();
+
+}
 
 bool ApplicationClass::RenderScene()
 {
-	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	D3DXMATRIX worldMatrix, viewMatrix, orthoMatrix;
 	bool result;
 
 	//Clear the buffers to begin the scene
@@ -479,17 +737,25 @@ bool ApplicationClass::RenderScene()
 	//Get the world,view and ortho matrices from the camera and d3d objects.
 	m_Camera->GetBaseViewMatrix(viewMatrix);
 	m_Direct3D->GetWorldMatrix(worldMatrix);
-	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
-	//Render the up sample window using the texture shader and the fill screen sized blurred render to texture resource
-	/*/result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(), m_TessellationMesh->GetIndexCount(), worldMatrix,
-		viewMatrix,projectionMatrix,2, );
+	//Turn off the Z Buffering to begin all 2D rendering
+	m_Direct3D->TurnZBufferOff();
+
+	//Put the up sample window vertex buffer on the graphics pipeline to prepare it for drawing
+	m_UpSampleWindow->Render(m_Direct3D->GetDeviceContext());
+	
+	//Render the up sample window 
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(), m_UpSampleWindow->GetIndexCount(), worldMatrix,
+		viewMatrix,orthoMatrix, tessellationAmount, m_UpSampleTexture->GetShaderResourceView());
 	if(!result)
 	{
 		return false;
 	}
 
-*/
+	//Turn Z buffering back on since all rendering is done
+	m_Direct3D->TurnZBufferOn();
+
 	//Present the rendered scene to screen
 	m_Direct3D->EndScene();
 
@@ -498,3 +764,193 @@ bool ApplicationClass::RenderScene()
 
 }
 
+bool ApplicationClass::DownSampleTexture()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, orthoMatrix;
+	bool result;
+
+	//Set the render target to be the render to texture
+	m_DownSampleTexture->SetRenderTarget(m_Direct3D->GetDeviceContext());
+
+	//Clear the render to texture
+	m_DownSampleTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), 0.0f,0.0f,0.0f,1.0f);
+	
+	//Generate the view matrix based on the camera's position
+	m_Camera->Render();
+	
+	//Get the world and view matrixes from the camera and d3d objects
+	m_Camera->GetBaseViewMatrix(viewMatrix);
+	m_Direct3D->GetWorldMatrix(worldMatrix);
+
+	//Get the ortho matrix from the render to texture since texture has different 
+	//dimensions being that it is smaller
+	m_DownSampleTexture->GetOrthoMatrix(orthoMatrix);
+
+	//Turn off the Z buffer to being all 2D rendering
+	m_Direct3D->TurnZBufferOff();
+
+	//Put the small ortho window vertex and index buffers on the graphics pipeline to
+	//prepare them for drawing
+	m_DownSampleWindow->Render(m_Direct3D->GetDeviceContext());
+
+	//Render the small ortho window using the texture shader and the render to
+	//texture of the scene as the texture resource
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(), m_DownSampleWindow->GetIndexCount(), 
+		worldMatrix, viewMatrix, orthoMatrix, tessellationAmount, m_RenderTexture->GetShaderResourceView());
+	if(!result)
+	{
+		return false;
+	}
+
+	//Turn the Z buffer back on now that all 2D rendering has been completed
+	m_Direct3D->TurnZBufferOn();
+
+	//Reset the render target back to the orginal back buffer and not the render to texture anymore
+	m_Direct3D->SetBackBufferRenderTarget();
+
+	return true;
+}
+bool ApplicationClass::RenderHorizontalBlurToTexture()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, orthoMatrix;
+	float screenSizeX;
+	bool result;
+
+	//Store the screen width in a float that will be used in the horizontal blur shader
+	screenSizeX = (float)m_HorizontalBlurTexture->GetTextureWidth();
+
+	//Set the render target to be the render to texture.
+	m_HorizontalBlurTexture->SetRenderTarget(m_Direct3D->GetDeviceContext());
+
+	//Clear the render to texture.
+	m_HorizontalBlurTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), 0.0f,0.0f,0.0f,1.0f);
+
+	//Generate the view matrix based on the camera's position
+	m_Camera->Render();
+
+	//Get the world and view matrices from the camera and d3d objects
+	m_Camera->GetBaseViewMatrix(viewMatrix);
+	m_Direct3D->GetWorldMatrix(worldMatrix);
+
+	//Get the ortho matrix from the render to texture since texture has different dimensions
+	m_HorizontalBlurTexture->GetOrthoMatrix(orthoMatrix);
+
+	//Turn off the z buffer to being all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+
+	//Put the down sample window vertex buffer on the graphics pipeline to prepare them for drawing
+	m_DownSampleWindow->Render(m_Direct3D->GetDeviceContext());
+
+	//Render the down sample window using the horizontal blue shader and the down sampled render to 
+	//texture resource
+	result = m_HorizontalBlurShader->Render(m_Direct3D->GetDeviceContext(), m_DownSampleWindow->GetIndexCount(),
+		worldMatrix,viewMatrix,orthoMatrix, m_DownSampleTexture->GetShaderResourceView(), 
+		screenSizeX);
+	if(!result)
+	{
+		return false;
+	}
+
+
+	//Turn the z buffer back on now that all 2D rendeing has completed
+	m_Direct3D->TurnZBufferOn();
+
+	//Reset the render target back to the original back buffer and not the render to texture anymore
+	m_Direct3D->SetBackBufferRenderTarget();
+
+	return true;
+}
+
+bool ApplicationClass::RenderVerticalBlurToTexture()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, orthoMatrix;
+	float screenSizeY;
+	bool result;
+
+	//Store the screen height in a float that will be used in the vertical blur shader
+	screenSizeY = (float)m_VerticalBlurTexture->GetTextureHeight();
+
+	//Set the render target to be the render to texture
+	m_VerticalBlurTexture->SetRenderTarget(m_Direct3D->GetDeviceContext());
+
+	//Clear the render to texture
+	m_VerticalBlurTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), 0.0f,0.0f,0.0f,1.0f);
+
+	//Generate the view matrix based on the camera's position
+	m_Camera->Render();
+
+	//Get the world and view matrices from the camera and d3d objects
+	m_Camera->GetBaseViewMatrix(viewMatrix);
+	m_Direct3D->GetWorldMatrix(worldMatrix);
+
+	//Get the ortho matrix from the render to texture since texture has different dimentions
+	m_VerticalBlurTexture->GetOrthoMatrix(orthoMatrix);
+
+	//Turn off the Z buffer to begin 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+
+	//Put the down sample window vertex buffer on the graphics pipeline to prepare them for drawing
+	m_DownSampleWindow->Render(m_Direct3D->GetDeviceContext());
+
+	//Render the down sample window using the vertical blur shader and the horizontal blurred render to texture resource
+	result = m_VerticalBlurShader->Render(m_Direct3D->GetDeviceContext(), m_DownSampleWindow->GetIndexCount(), worldMatrix, 
+		viewMatrix, orthoMatrix, m_HorizontalBlurTexture->GetShaderResourceView(), screenSizeY);
+	if(!result)
+	{
+		return false;
+	}
+
+	//Turn the Z buffer back on nwo all 2D rendering has completed.
+	m_Direct3D->TurnZBufferOn();
+
+	//Reset the render target back to the original back buffer and not the render to texture anymore
+	m_Direct3D->SetBackBufferRenderTarget();
+
+	return true;
+}
+
+bool ApplicationClass::UpSampleTexture()
+{
+	D3DXMATRIX worldMatrix, viewMatrix, orthoMatrix;
+	bool result;
+
+	//Set the render target to be the render to texture
+	m_UpSampleTexture->SetRenderTarget(m_Direct3D->GetDeviceContext());
+
+	//Clear the render to texture
+	m_UpSampleTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), 0.0f,0.0f,0.0f,1.0f);
+
+	//Generate the view matrix based on the camera's position
+	m_Camera->Render();
+
+	//Get the world and view matrices from the camera and d3d objects
+	m_Camera->GetBaseViewMatrix(viewMatrix);
+	m_Direct3D->GetWorldMatrix(worldMatrix);
+
+	//Get the ortho matrix from the render to texture since texture has different dimensions
+	m_UpSampleTexture->GetOrthoMatrix(orthoMatrix);
+
+	//Turn off the z buffer to begin all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+
+	//Put the up sample window vertex buffer on the graphics pipeline to prepare them for drawing
+	m_UpSampleWindow->Render(m_Direct3D->GetDeviceContext());
+
+	//Render the up sample window using the texture shader and the samall sized final blurred
+	//render to texture resource.
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(), m_UpSampleWindow->GetIndexCount(), 
+		worldMatrix, viewMatrix, orthoMatrix, tessellationAmount, m_VerticalBlurTexture->GetShaderResourceView());
+	if(!result)
+	{
+		return false;
+	}
+
+	//Turn the z buffer back on now that all 2D rendering has completed
+	m_Direct3D->TurnZBufferOn();
+
+	//Rest the render taret back to the original back buffer and not the render to texture anymore.
+	m_Direct3D->SetBackBufferRenderTarget();
+
+	return true;
+
+}
