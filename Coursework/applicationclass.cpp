@@ -21,7 +21,9 @@ ApplicationClass::ApplicationClass()
 	
 	m_Light = 0;
 	m_TessellationMesh = 0;
+	m_Cube = 0;
 	m_TessellationShader = 0;
+	m_FragmentationShader = 0;
 
 	tessellationAmount = 2;
 }
@@ -138,6 +140,18 @@ bool ApplicationClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidt
 		return false;
 	}
 
+
+	//Create the tessellated cube object
+	m_Cube = new TessellationMeshClass;
+
+	//Initialize the tessellated mesh object
+	result = m_Cube->Initialize(m_Direct3D->GetDevice(), L"data/brick1.dds");
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not intiialise the cube object", L"Error", MB_OK);
+		return false;
+	}
+
 	//Create the tessellation shader object
 	m_TessellationShader = new TessellationShaderClass;
 	if(!m_TessellationShader)
@@ -152,6 +166,23 @@ bool ApplicationClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidt
 		MessageBox(hwnd, L"Could not intiialise the tesselation shader object.", L"Error", MB_OK);
 		return false;
 	}
+
+	//TODO get the fragmentation shader working
+	//Create the fragmentation shader object
+	//m_FragmentationShader = new FragmentationShaderClass;
+	//if(!m_FragmentationShader)
+	//{
+	//	return false;
+	//}
+
+	////Initialize the fragmentation shader object
+
+	//result = m_FragmentationShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	//if(!result)
+	//{
+	//	MessageBox(hwnd, L"Could not initialize the fragmentation shader object.", L"Error" , MB_OK);
+	//	return false;
+	//}
 
 	// Create the timer object.
 	m_Timer = new TimerClass;
@@ -191,10 +222,6 @@ bool ApplicationClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidt
 	m_Light->SetDiffuseColor(1.0f,0.0f, 0.0f,1.0f);
 	m_Light->SetDirection(0.0f,0.0f,-1.0f);
 
-	
-
-
-
 	return true;
 }
 
@@ -226,12 +253,28 @@ void ApplicationClass::Shutdown()
 		m_TessellationShader = 0;
 	}
 
+	//Release the fragmentation shader object
+	/*if(m_FragmentationShader)
+	{
+		m_FragmentationShader->Shutdown();
+		delete m_FragmentationShader;
+		m_FragmentationShader = 0;
+	}
+*/
 	// Release the mesh object
 	if(m_Mesh)
 	{
 		m_Mesh->Shutdown();
 		delete m_Mesh;
 		m_Mesh = 0;
+	}
+
+	//Release the cube object
+	if(m_Cube)
+	{
+		m_Cube->Shutdown();
+		delete m_Cube;
+		m_Cube = 0;
 	}
 
 	// Release the camera object.
@@ -263,8 +306,6 @@ void ApplicationClass::Shutdown()
 		delete m_Input;
 		m_Input = 0;
 	}
-
-
 
 	//Release the tessellation shader object
 	if(m_TessellationShader)
@@ -351,8 +392,6 @@ bool ApplicationClass::HandleInput(float frameTime)
 	keyDown = m_Input->IsPgDownPressed();
 	m_Position->LookDownward(keyDown);
 
-	
-	
 	// Get the view point position/rotation.
 	m_Position->GetPosition(posX, posY, posZ);
 	m_Position->GetRotation(rotX, rotY, rotZ);
@@ -381,17 +420,42 @@ bool ApplicationClass::RenderGraphics()
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	
 
+	m_Mesh->Render(m_Direct3D->GetDeviceContext());
 
-	// Push mesh data onto gfx hardware
-	m_TessellationMesh->Render(m_Direct3D->GetDeviceContext());	
-
-	//Render the Mesh using the light shader
-	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(),  m_TessellationMesh->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, tessellationAmount);
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(),  m_Mesh->GetIndexCount(),  worldMatrix, viewMatrix, projectionMatrix, tessellationAmount, m_Mesh->GetTexture());
 	if (!result)
 	{
 		return false;
 	}
+
+
+	// Push mesh data onto gfx hardware
+	D3DXMatrixTranslation(&worldMatrix, 0, 0 ,5);
+	m_TessellationMesh->Render(m_Direct3D->GetDeviceContext());	
+	
+	//Render the Mesh using the light shader
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(),  m_TessellationMesh->GetIndexCount(),  worldMatrix, viewMatrix, projectionMatrix, tessellationAmount, m_TessellationMesh->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+
+	D3DXMatrixTranslation(&worldMatrix, 2, 0, 0);
+
+	m_Cube->Render(m_Direct3D->GetDeviceContext());
+
+	//Render the Mesh using the light shader
+	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(),  m_Cube->GetIndexCount(),  worldMatrix, viewMatrix, projectionMatrix, tessellationAmount, m_Cube->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	D3DXMatrixTranslation(&worldMatrix,-2, 0 ,0);
+
 
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
@@ -418,14 +482,14 @@ bool ApplicationClass::RenderScene()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
 	//Render the up sample window using the texture shader and the fill screen sized blurred render to texture resource
-	result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(), m_TessellationMesh->GetIndexCount(), worldMatrix,
-		viewMatrix,projectionMatrix,2);
+	/*/result = m_TessellationShader->Render(m_Direct3D->GetDeviceContext(), m_TessellationMesh->GetIndexCount(), worldMatrix,
+		viewMatrix,projectionMatrix,2, );
 	if(!result)
 	{
 		return false;
 	}
 
-
+*/
 	//Present the rendered scene to screen
 	m_Direct3D->EndScene();
 

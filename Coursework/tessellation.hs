@@ -7,7 +7,8 @@ cbuffer TessellationBuffer
 struct HullInputType
 {
     float3 position : POSITION;
-    float4 color : COLOR;
+	float2 tex : TEXCOORD0;
+    float4 normal : NORMAL;
 };
 
 struct ConstantOutputType
@@ -19,7 +20,8 @@ struct ConstantOutputType
 struct HullOutputType
 {
     float3 position : POSITION;
-    float4 color : COLOR;
+	float2 tex : TEXCOORD0;
+    float4 normal : NORMAL;
 };
 
 ConstantOutputType ColorPatchConstantFunction(InputPatch<HullInputType, 4> inputPatch, uint patchId : SV_PrimitiveID)
@@ -29,9 +31,8 @@ ConstantOutputType ColorPatchConstantFunction(InputPatch<HullInputType, 4> input
     // Set the tessellation factors for the three edges of the triangle.
     output.edges[0] = tessellationFactor;
     output.edges[1] = tessellationFactor;
-    output.edges[2] = tessellationFactor;
+	output.edges[2] = tessellationFactor;
 	output.edges[3] = tessellationFactor;
-	
 
     // Set the tessellation factor for tessallating inside the triangle.
     output.inside[0] = tessellationFactor;
@@ -54,8 +55,10 @@ HullOutputType ColorHullShader(InputPatch<HullInputType, 4> patch, uint pointId 
     // Set the position for this control point as the output position.
     output.position = patch[pointId].position;
 
+	output.tex = patch[pointId].tex;
+
     // Set the input color as the output color.
-    output.color = patch[pointId].color;
+    output.normal = patch[pointId].normal;
 
     return output;
 }

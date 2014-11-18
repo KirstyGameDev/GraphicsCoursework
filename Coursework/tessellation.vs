@@ -8,7 +8,8 @@ struct VertexInputType
 struct HullInputType
 {
     float3 position : POSITION;
-    float4 color : COLOR;
+	float2 tex : TEXCOORD0;
+    float3 normal : NORMAL;
 };
 
 HullInputType ColorVertexShader(VertexInputType input)
@@ -18,8 +19,11 @@ HullInputType ColorVertexShader(VertexInputType input)
 	 // Pass the vertex position into the hull shader.
     output.position = input.position;
     
-    // Pass the input color into the hull shader.
-    output.color = float4(0.0, 1.0, 0.0, 1.0);
+	//Store the tex coords for the pixel shader
+	output.tex = input.tex;
+
+    // Pass the input normal into the hull shader.
+    output.normal = input.normal;
     
     return output;
 }

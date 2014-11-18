@@ -18,8 +18,8 @@ void ColorGeometryShader(triangle PixelInputType input[3], inout TriangleStream 
 	PixelInputType output = (PixelInputType)0;
 	for(uint i = 0; i < 3; i++)
 	{
-		//output.position = input[i].position;
-		output.position = lerp(input[i].position, input[i].position * 3.0 , i); 
+		output.position = input[i].position;
+		//output.position = lerp(input[i].position, input[i].position * 3.0 , i); 
 		output.color = float4(1.0f,0.0f,0.0f,1.0f);
 		triStream.Append(output);
 	}

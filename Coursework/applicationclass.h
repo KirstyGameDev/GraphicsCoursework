@@ -13,7 +13,7 @@ const bool VSYNC_ENABLED = true;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
-
+#include <D3dx9math.h>
 ///////////////////////
 // MY CLASS INCLUDES //
 ///////////////////////
@@ -32,6 +32,7 @@ const float SCREEN_NEAR = 0.1f;
 #include "verticalblurshaderclass.h"
 #include "tessellationshaderclass.h"
 #include "tessellationMesh.h"
+#include "fragmentationshaderclass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ApplicationClass
@@ -71,10 +72,12 @@ private:
 
 	float meshRotationAngle, meshRotationSpeed;
 
-	TessellationMeshClass* m_TessellationMesh;
+	TessellationMeshClass* m_TessellationMesh, *m_Cube;
 	TessellationShaderClass* m_TessellationShader;
 
 	int tessellationAmount;
+
+	FragmentationShaderClass* m_FragmentationShader;
 };
 
 #endif

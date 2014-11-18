@@ -47,10 +47,10 @@ bool TessellationMeshClass::InitializeBuffers(ID3D11Device* device)
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 	// Set the number of vertices in the vertex array.
-	m_vertexCount = 8;
+	m_vertexCount = 16;
 
 	// Set the number of indices in the index array.
-	m_indexCount = 24;
+	m_indexCount = 16;
 
 	// Create the vertex array.
 	vertices = new VertexType[m_vertexCount];
@@ -67,7 +67,7 @@ bool TessellationMeshClass::InitializeBuffers(ID3D11Device* device)
 	}
 
 	// Load the vertex array with data.
-	vertices[0].position = D3DXVECTOR3(-1.0f, -1.0f,0.0f);  // Bottom left.
+	vertices[0].position = D3DXVECTOR3(-1.0f, -1.0f,0.0f);  // Bottom left.			//Front quad
 	vertices[0].texture = D3DXVECTOR2(0.0f, 1.0f);
 	vertices[0].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
@@ -76,28 +76,60 @@ bool TessellationMeshClass::InitializeBuffers(ID3D11Device* device)
 	vertices[1].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 	
 	vertices[2].position = D3DXVECTOR3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[2].texture = D3DXVECTOR2(1.0f, 0.0f);
+	vertices[2].texture = D3DXVECTOR2(1.0f, 1.0f);
 	vertices[2].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
 	vertices[3].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);	//Top Right
-	vertices[3].texture = D3DXVECTOR2(0.0f,0.0f);
+	vertices[3].texture = D3DXVECTOR2(1.0f,0.0f);
 	vertices[3].normal = D3DXVECTOR3(0.0f,0.0f,-1.0f);
 
-	vertices[4].position = D3DXVECTOR3(1.0f,-1.0f,2.0f);	//back bottom right
-	vertices[4].texture = D3DXVECTOR2(1.0f,0.0f);
+	vertices[4].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);	//Top Left						Right Quad
+	vertices[4].texture = D3DXVECTOR2(0.0f,0.0f);
 	vertices[4].normal = D3DXVECTOR3(1.0f,0.0f,0.0f);
-
-	vertices[5].position = D3DXVECTOR3(1.0f,1.0f,2.0f);		//back top right
-	vertices[5].texture = D3DXVECTOR2(0.0f,0.0f);
+															
+	vertices[5].position = D3DXVECTOR3(1.0f,-1.0f,0.0f);	//Bottom left
+	vertices[5].texture = D3DXVECTOR2(0.0f,1.0f);
 	vertices[5].normal = D3DXVECTOR3(1.0f,0.0f,0.0f);
 
-	vertices[6].position = D3DXVECTOR3(-1.0f,1.0f,2.0f);	//back top left
-	vertices[6].texture = D3DXVECTOR2(0.0f,0.0f);
-	vertices[6].normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+	vertices[6].position = D3DXVECTOR3(1.0f,1.0f,2.0f);		//Top Right
+	vertices[6].texture = D3DXVECTOR2(1.0f,0.0f);
+	vertices[6].normal = D3DXVECTOR3(1.0f,0.0f,0.0f);
 
-	vertices[7].position = D3DXVECTOR3(-1.0f,-1.0f,2.0f);	//back bottom left
-	vertices[7].texture = D3DXVECTOR2(0.0f,0.0f);
+	vertices[7].position = D3DXVECTOR3(1.0f,-1.0f,2.0f);	//Bottom right
+	vertices[7].texture = D3DXVECTOR2(1.0f,1.0f);
 	vertices[7].normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+
+	vertices[8].position = D3DXVECTOR3(1.0f,1.0f,2.0f);	// TopLeft						Back Quad
+	vertices[8].texture = D3DXVECTOR2(0.0f,0.0f);
+	vertices[8].normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+
+	vertices[9].position = D3DXVECTOR3(1.0f,-1.0f, 2.0f);	//Bottom Left
+	vertices[9].texture = D3DXVECTOR2(0.0f,1.0f);
+	vertices[9].normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+
+	vertices[10].position = D3DXVECTOR3(-1.0f, 1.0f, 2.0f);	//Top Right
+	vertices[10].texture = D3DXVECTOR2(1.0f,0.0f);
+	vertices[10].normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+
+	vertices[11].position = D3DXVECTOR3(-1.0f, -1.0f, 2.0f);	//Bottom Right
+	vertices[11].texture = D3DXVECTOR2(1.0f,1.0f);
+	vertices[11].normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+
+	vertices[12].position = D3DXVECTOR3(-1.0f, 1.0f, 2.0f);		//Top Left					Left Quad
+	vertices[12].texture = D3DXVECTOR2(0.0f,0.0f);
+	vertices[12].normal = D3DXVECTOR3(-1.0f,0.0f,0.0f);
+
+	vertices[13].position = D3DXVECTOR3(-1.0f, -1.0f, 2.0f);	//Bottom left
+	vertices[13].texture = D3DXVECTOR2(0.0f,1.0f);
+	vertices[13].normal = D3DXVECTOR3(-1.0f,0.0f,0.0f);
+
+	vertices[14].position = D3DXVECTOR3(-1.0f, 1.0f, 0.0f);	//Top Right
+	vertices[14].texture = D3DXVECTOR2(1.0f,0.0f);
+	vertices[14].normal = D3DXVECTOR3(-1.0f,0.0f,0.0f);
+
+	vertices[15].position = D3DXVECTOR3(-1.0f, -1.0f, 0.0f);	//Bottom Right
+	vertices[15].texture = D3DXVECTOR2(1.0f,1.0f);
+	vertices[15].normal = D3DXVECTOR3(-1.0f,0.0f,0.0f);
 	
 	// Load the index array with data.
 	indices[0] = 1;  // Top left.				front quad
@@ -105,30 +137,30 @@ bool TessellationMeshClass::InitializeBuffers(ID3D11Device* device)
 	indices[2] = 0;  // Bottom left.
 	indices[3] = 2;	//top right
 
-	indices[4] = 6;								//left quad
-	indices[5] = 1;
-	indices[6]= 7;
-	indices[7] = 0;
+	indices[4] = 4;								//right quad
+	indices[5] = 6;
+	indices[6]= 5;
+	indices[7] = 7;
 
-	indices[8] = 5;	//bottom left				back quad
-	indices[9] = 6; //top left
-	indices[10] =4; //bottom right
-	indices[11] = 7; //top right
+	indices[8] = 8;	//bottom left				back quad
+	indices[9] = 10; //top left
+	indices[10] =9; //bottom right
+	indices[11] = 11; //top right
 
-	indices[12] = 3;	//bottom left				right side quad
-	indices[13] = 5;	//top left
-	indices[14] = 2; //bottom right
-	indices[15] = 4; //top right
+	indices[12] = 12;	//bottom left				right side quad
+	indices[13] = 14;	//top left
+	indices[14] = 13; //bottom right
+	indices[15] = 15; //top right
 
-	indices[16] = 6;								//Top quad
-	indices[17] = 5;
-	indices[18] = 1;
-	indices[19] = 3;
+	//indices[16] = 6;								//Top quad
+	//indices[17] = 5;
+	//indices[18] = 1;
+	//indices[19] = 3;
 
-	indices[20] = 0;							//Bottom quad
-	indices[21] = 7;
-	indices[22] = 2;
-	indices[23] = 4;
+	//indices[20] = 0;							//Bottom quad
+	//indices[21] = 7;
+	//indices[22] = 2;
+	//indices[23] = 4;
 
 
 

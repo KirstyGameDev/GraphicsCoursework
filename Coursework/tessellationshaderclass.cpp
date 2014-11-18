@@ -6,10 +6,11 @@ TessellationShaderClass::TessellationShaderClass()
 	m_hullShader = 0;
 	m_domainShader = 0;
 	m_pixelShader = 0;
-	m_geometryShader = 0;
+	//m_geometryShader = 0;
 	m_layout = 0;
 	m_matrixBuffer = 0;
 	m_tessellationBuffer = 0;
+	m_sampleState = 0;
 }
 
 
@@ -28,7 +29,7 @@ bool TessellationShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 	bool result;
 
 	// Initialize the shaders.
-	result = InitializeShader(device, hwnd, L"tessellation.vs", L"tessellation.hs", L"tessellation.ds", L"tessellation.ps", L"tessellation.gs");
+	result = InitializeShader(device, hwnd, L"tessellation.vs", L"tessellation.hs", L"tessellation.ds", L"tessellation.ps");
 	if(!result)
 	{
 		return false;
@@ -47,13 +48,13 @@ void TessellationShaderClass::Shutdown()
 }
 
 bool TessellationShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
-			      D3DXMATRIX projectionMatrix, float tessellationAmount)
+			      D3DXMATRIX projectionMatrix, float tessellationAmount, ID3D11ShaderResourceView* texture)
 {
 	bool result;
 
 
 	// Set the shader parameters that it will use for rendering.
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, tessellationAmount);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, tessellationAmount, texture);
 	if(!result)
 	{
 		return false;
@@ -65,7 +66,7 @@ bool TessellationShaderClass::Render(ID3D11DeviceContext* deviceContext, int ind
 	return true;
 }
 
-bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* hsFilename, WCHAR* dsFilename, WCHAR* psFilename, WCHAR* gsFilename)
+bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* hsFilename, WCHAR* dsFilename, WCHAR* psFilename)
 {
 	HRESULT result;
 	ID3D10Blob* errorMessage;
@@ -74,7 +75,8 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 	ID3D10Blob* hullShaderBuffer;
 	ID3D10Blob* domainShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
-	ID3D10Blob* geometryShaderBuffer;
+	//ID3D10Blob* geometryShaderBuffer;
+	D3D11_SAMPLER_DESC samplerDesc;
 
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
 	unsigned int numElements;
@@ -89,7 +91,7 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 	hullShaderBuffer = 0;
 	domainShaderBuffer = 0;
 	pixelShaderBuffer = 0;
-	geometryShaderBuffer = 0;
+	//geometryShaderBuffer = 0;
 
 	// Compile the vertex shader code.
 	result = D3DX11CompileFromFile(vsFilename, NULL, NULL, "ColorVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
@@ -168,7 +170,7 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 	}
 
 	// Compile the geometry shader code.
-	result = D3DX11CompileFromFile(gsFilename, NULL, NULL, "ColorGeometryShader", "gs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
+	/*result = D3DX11CompileFromFile(gsFilename, NULL, NULL, "ColorGeometryShader", "gs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
 				       &geometryShaderBuffer, &errorMessage, NULL);
 	if(FAILED(result))
 	{
@@ -185,7 +187,7 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 
 		return false;
 	}
-
+	*/
 	// Create the vertex shader from the buffer.
 	result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
 	if(FAILED(result))
@@ -215,11 +217,11 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 	}
 
 	//Create the geometry shader from the buffer
-	result = device->CreateGeometryShader(geometryShaderBuffer->GetBufferPointer(), geometryShaderBuffer->GetBufferSize(), NULL, &m_geometryShader);
+	/*result = device->CreateGeometryShader(geometryShaderBuffer->GetBufferPointer(), geometryShaderBuffer->GetBufferSize(), NULL, &m_geometryShader);
 	if(FAILED(result))
 	{
 		return false;
-	}
+	}*/
 
 	// Create the vertex input layout description.
 	polygonLayout[0].SemanticName = "POSITION";
@@ -269,8 +271,8 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = 0;
 
-	geometryShaderBuffer->Release();
-	geometryShaderBuffer = 0;
+	/*geometryShaderBuffer->Release();
+	geometryShaderBuffer = 0;*/
 
 	// Setup the description of the dynamic matrix constant buffer that is in the domain shader.
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -302,12 +304,41 @@ bool TessellationShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, 
 		return false;
 	}
 
+
+	// Create a texture sampler state description.
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
+	if(FAILED(result))
+	{
+		return false;
+	}
+
 	return true;
 }
 
 
 void TessellationShaderClass::ShutdownShader()
 {
+	//Release the sampler state
+	if(m_sampleState)
+	{
+		m_sampleState->Release();
+		m_sampleState = 0;
+	}
 
 	// Release the tessellation constant buffer.
 	if(m_tessellationBuffer)
@@ -359,11 +390,12 @@ void TessellationShaderClass::ShutdownShader()
 	}
 
 	//Release the geoemtry shader
-	if(m_geometryShader)
+	/*if(m_geometryShader)
 	{
 		m_geometryShader->Release();
 		m_geometryShader = 0;
 	}
+	*/
 	return;
 }
 
@@ -404,7 +436,7 @@ void TessellationShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage,
 }
 
 bool TessellationShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix,
-					   D3DXMATRIX projectionMatrix, float tessellationFactor)
+					   D3DXMATRIX projectionMatrix, float tessellationFactor, ID3D11ShaderResourceView* texture)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -466,6 +498,8 @@ bool TessellationShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceCon
 	// Now set the tessellation constant buffer in the hull shader with the updated values.
 	deviceContext->HSSetConstantBuffers(bufferNumber, 1, &m_tessellationBuffer);
 
+	//Set the shader texture resource in the vertex shader 
+	deviceContext->PSSetShaderResources(0, 1, &texture);
 	return true;
 }
 
@@ -480,7 +514,10 @@ void TessellationShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, i
 	deviceContext->HSSetShader(m_hullShader, NULL, 0);
 	deviceContext->DSSetShader(m_domainShader, NULL, 0);
 	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
-	deviceContext->GSSetShader(m_geometryShader, NULL,0);
+//	deviceContext->GSSetShader(m_geometryShader, NULL,0);
+
+	// Set the sampler state in the pixel shader.
+	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	// Render the triangle.
 	deviceContext->DrawIndexed(indexCount, 0, 0);
